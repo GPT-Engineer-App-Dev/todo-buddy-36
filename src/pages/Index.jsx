@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Container, VStack, HStack, Input, Button, Checkbox, Text, IconButton, Heading } from "@chakra-ui/react";
-import { FaTrash, FaEdit, FaSave } from "react-icons/fa";
+import { FaTrash } from "react-icons/fa";
 
 const Index = () => {
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState(() => {
+    const savedTasks = localStorage.getItem("tasks");
+    return savedTasks ? JSON.parse(savedTasks) : [];
+  });
   const [newTask, setNewTask] = useState("");
 
-  const [editIndex, setEditIndex] = useState(null);
-  const [editText, setEditText] = useState("");
+  useEffect(() => {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }, [tasks]);
   
   const handleAddTask = () => {
     if (newTask.trim() !== "") {
@@ -26,17 +30,7 @@ const Index = () => {
     setTasks(newTasks);
   };
 
-  const handleEditTask = (index) => {
-    setEditIndex(index);
-    setEditText(tasks[index].text);
-  };
-
-  const handleSaveTask = (index) => {
-    const newTasks = tasks.map((task, i) => i === index ? { ...task, text: editText } : task);
-    setTasks(newTasks);
-    setEditIndex(null);
-    setEditText("");
-  };
+  
 
   return (
     <Container centerContent maxW="container.md" height="100vh" display="flex" flexDirection="column" justifyContent="center" alignItems="center">
@@ -53,38 +47,14 @@ const Index = () => {
         <VStack width="100%" spacing={3}>
           {tasks.map((task, index) => (
             <HStack key={index} width="100%" justifyContent="space-between">
-              {editIndex === index ? (
-                <>
-                  <Input
-                    value={editText}
-                    onChange={(e) => setEditText(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSaveTask(index)}
-                  />
-                  <IconButton
-                    aria-label="Save task"
-                    icon={<FaSave />}
-                    onClick={() => handleSaveTask(index)}
-                  />
-                </>
-              ) : (
-                <>
-                  <Checkbox isChecked={task.completed} onChange={() => handleToggleTask(index)}>
-                    <Text as={task.completed ? "s" : undefined}>{task.text}</Text>
-                  </Checkbox>
-                  <HStack>
-                    <IconButton
-                      aria-label="Edit task"
-                      icon={<FaEdit />}
-                      onClick={() => handleEditTask(index)}
-                    />
-                    <IconButton
-                      aria-label="Delete task"
-                      icon={<FaTrash />}
-                      onClick={() => handleDeleteTask(index)}
-                    />
-                  </HStack>
-                </>
-              )}
+              <Checkbox isChecked={task.completed} onChange={() => handleToggleTask(index)}>
+                <Text as={task.completed ? "s" : undefined}>{task.text}</Text>
+              </Checkbox>
+              <IconButton
+                aria-label="Delete task"
+                icon={<FaTrash />}
+                onClick={() => handleDeleteTask(index)}
+              />
             </HStack>
           ))}
         </VStack>
